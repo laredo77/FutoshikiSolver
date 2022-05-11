@@ -26,52 +26,52 @@ class Logic:
         self.main_loop()
         #self.paint_board(self.grid, self.sign_grid_by_row, self.sign_grid_by_col)
 
-    # def paint_board(self, grid, sign_rows, sign_cols):
-    #
-    #     y = 0.22
-    #     for i in range(0, 5):
-    #         x = 0.25
-    #         for j in range(0, 5):
-    #             self.frame = Canvas(
-    #                 bg="#307070",
-    #                 bd=0,
-    #                 highlightbackground="#100100100",
-    #                 width=20,
-    #                 height=20)
-    #             self.frame.create_text(10, 10, text=grid[i][j], fill="black")
-    #             self.frame.place(relx=x, rely=y)
-    #             x += 0.1
-    #         y += 0.1
-    #
-    #     y = 0.22
-    #     for i in range(len(sign_rows)):
-    #         x = 0.3
-    #         for j in range(len(sign_rows[i])):
-    #             self.row_signs_frame = Canvas(
-    #                 bg="#404040",
-    #                 bd=0,
-    #                 highlightbackground="#404040",
-    #                 width=20,
-    #                 height=20)
-    #             self.row_signs_frame.create_text(10, 10, text=sign_rows[i][j], fill="black", font='bold')
-    #             self.row_signs_frame.place(relx=x, rely=y)
-    #             x += 0.1
-    #         y += 0.1
-    #
-    #     y = 0.27
-    #     for i in range(len(sign_cols)):
-    #         x = 0.25
-    #         for j in range(len(sign_cols[i])):
-    #             self.col_signs_frame = Canvas(
-    #                 bg="#404040",
-    #                 bd=0,
-    #                 highlightbackground="#404040",
-    #                 width=20,
-    #                 height=20)
-    #             self.col_signs_frame.create_text(10, 10, text=sign_cols[i][j], fill="black", font='bold')
-    #             self.col_signs_frame.place(relx=x, rely=y)
-    #             x += 0.1
-    #         y += 0.1
+    def paint_board(self, grid, sign_rows, sign_cols):
+
+        y = 0.22
+        for i in range(0, 5):
+            x = 0.25
+            for j in range(0, 5):
+                self.frame = Canvas(
+                    bg="#307070",
+                    bd=0,
+                    highlightbackground="#100100100",
+                    width=20,
+                    height=20)
+                self.frame.create_text(10, 10, text=grid[i][j], fill="black")
+                self.frame.place(relx=x, rely=y)
+                x += 0.1
+            y += 0.1
+
+        y = 0.22
+        for i in range(len(sign_rows)):
+            x = 0.3
+            for j in range(len(sign_rows[i])):
+                self.row_signs_frame = Canvas(
+                    bg="#404040",
+                    bd=0,
+                    highlightbackground="#404040",
+                    width=20,
+                    height=20)
+                self.row_signs_frame.create_text(10, 10, text=sign_rows[i][j], fill="black", font='bold')
+                self.row_signs_frame.place(relx=x, rely=y)
+                x += 0.1
+            y += 0.1
+
+        y = 0.27
+        for i in range(len(sign_cols)):
+            x = 0.25
+            for j in range(len(sign_cols[i])):
+                self.col_signs_frame = Canvas(
+                    bg="#404040",
+                    bd=0,
+                    highlightbackground="#404040",
+                    width=20,
+                    height=20)
+                self.col_signs_frame.create_text(10, 10, text=sign_cols[i][j], fill="black", font='bold')
+                self.col_signs_frame.place(relx=x, rely=y)
+                x += 0.1
+            y += 0.1
 
     def initialize_first_generation(self):
         for matrix in range(0, 100):
@@ -156,16 +156,93 @@ class Logic:
             k += 1
             #self.paint_board(matrix[0], matrix[1], matrix[2])
 
+    def generate_matrices(self, amount):
+        matrices = []
+        for i in range(0, amount):
+            grid = [["0" for i in range(self.SIZE)] for j in range(self.SIZE)]
+            for coordinate in self.COORDINATES_OF_GIVEN_DIGIT:
+                coordinate = coordinate.split()
+                grid[int(coordinate[0]) - 1][int(coordinate[1]) - 1] = int(coordinate[2])
+
+            sign_grid_by_row = [["" for i in range(self.SIZE)] for j in range(self.SIZE)]
+            sign_grid_by_col = [["" for i in range(self.SIZE)] for j in range(self.SIZE)]
+            for coordinate in self.COORDINATES_OF_GREATER_THEN_SIGN:
+                coordinate = coordinate.split()
+                if coordinate[0] == coordinate[2]:
+                    if coordinate[1] > coordinate[3]:
+                        sign_grid_by_row[int(coordinate[0]) - 1][int(coordinate[3]) - 1] = "<"
+                    else:
+                        sign_grid_by_row[int(coordinate[0]) - 1][int(coordinate[1]) - 1] = ">"
+                else:
+                    if coordinate[0] > coordinate[2]:
+                        sign_grid_by_col[int(coordinate[2]) - 1][int(coordinate[1]) - 1] = "/\\"
+                    else:
+                        sign_grid_by_col[int(coordinate[0]) - 1][int(coordinate[3]) - 1] = "\/"
+
+            del sign_grid_by_col[-1]
+            for i in range(len(sign_grid_by_row)):
+                del sign_grid_by_row[i][-1]
+
+            nums = list(range(1, self.SIZE +1))
+            permutations = list(itertools.permutations(nums))
+            for i in range(0, self.SIZE):
+                permutation = list(permutations[random.randrange(len(permutations))])
+                for j in range(0, self.SIZE):
+                    if grid[i][j] != "0":
+                        permutation.remove(int(grid[i][j]))
+                for j in range(0, self.SIZE):
+                    if grid[i][j] == "0":
+                        grid[i][j] = permutation[0]
+                        permutation.pop(0)
+            grade = 0
+            matrices.append((grid, sign_grid_by_row, sign_grid_by_col, grade))
+
+        return matrices
+
+    def crossover(self, matrices):
+        return_matrices = []
+        random.shuffle(matrices)
+        for i in range(0, len(matrices) - 1):
+            new_matrix = []
+            partition = random.randint(0, self.SIZE)
+            for j in range(0, partition):
+                new_matrix.append(matrices[i][0][j])
+
+            for j in range(partition, self.SIZE):
+                new_matrix.append(matrices[i + 1][0][j])
+
+            return_matrices.append((new_matrix, matrices[i][1], matrices[i][2], matrices[i][3]))
+        return_matrices.append(matrices[0])
+        return return_matrices
+
+
     def main_loop(self):
         current_generation = 1
         while True:
             self.generation.sort(key=lambda tup: tup[3])
             if self.generation[0][3] == 0:
                 print("finished, should quit or print solution")
+                print(current_generation)
+                print(self.generation[0])
                 break
 
             next_generation = []
+            for i in range(0, 40): # 30% of best result in the last generation (should work without fixed number)
+                next_generation.append(self.generation[i])
 
+            new_matrices = self.generate_matrices(10)
+            for i in range(0, 10):
+                next_generation.append(new_matrices[i])
 
+            crossed_matrices = self.crossover(next_generation)
+            for i in range(0, len(crossed_matrices)):
+                next_generation.append(crossed_matrices[i])
 
             current_generation += 1
+            self.generation = next_generation
+            self.fitness()
+            if current_generation == 800:
+                self.paint_board(self.generation[0][0], self.generation[0][1], self.generation[0][2])
+                print(self.generation[0][3])
+                print("current generation is 400, quiting")
+                break

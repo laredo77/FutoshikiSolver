@@ -1,18 +1,19 @@
 import random
 import itertools
-import app
 
-MUTATE = 0.05
-ELITE = 0.4
-NEW_MATRICES = 0.1
+MUTATE = 0.00
+ELITE = 0.25
+NEW_MATRICES = 0.25
 NUM_OF_SOLUTIONS = 100
+MAX_ITERATIONS = 1200
 
 
 class Logic:
-    def __init__(self):
+    def __init__(self, app):
         with open('input.txt') as file:
             lines = file.readlines()
 
+        self.app = app
         self.size = int(lines[0].strip('\n'))
         self.matrix_size = self.size * 2 - 1
         self.num_of_digits = int(lines[1].strip('\n'))
@@ -27,10 +28,9 @@ class Logic:
 
         self.generation = []
         self.initialize_first_generation()
-        self.main_loop()
 
     def initialize_first_generation(self):
-        self.generation = self.generate_matrices(100)
+        self.generation = self.generate_matrices(NUM_OF_SOLUTIONS)
         self.fitness()
 
     def fitness(self):
@@ -98,19 +98,19 @@ class Logic:
                         sign_grid_by_col[int(coordinate[0]) - 1][int(coordinate[3]) - 1] = "\/"
 
             del sign_grid_by_col[-1]
-            for i in range(len(sign_grid_by_row)):
-                del sign_grid_by_row[i][-1]
+            for j in range(len(sign_grid_by_row)):
+                del sign_grid_by_row[j][-1]
 
             nums = list(range(1, self.size +1))
             permutations = list(itertools.permutations(nums))
-            for i in range(0, self.size):
+            for k in range(0, self.size):
                 permutation = list(permutations[random.randrange(len(permutations))])
                 for j in range(0, self.size):
-                    if grid[i][j] != "0":
-                        permutation.remove(int(grid[i][j]))
+                    if grid[k][j] != "0":
+                        permutation.remove(int(grid[k][j]))
                 for j in range(0, self.size):
-                    if grid[i][j] == "0":
-                        grid[i][j] = permutation[0]
+                    if grid[k][j] == "0":
+                        grid[k][j] = permutation[0]
                         permutation.pop(0)
             grade = 0
             matrices.append((grid, sign_grid_by_row, sign_grid_by_col, grade))
@@ -147,42 +147,37 @@ class Logic:
         current_generation = 1
         while True:
             if self.generation[0][3] == 0:
-                app.App.paint_board(self, self.generation[0][0], self.generation[0][1], self.generation[0][2])
-                print(current_generation)
-                #add information
+                self.app.paint_board(self.generation[0][0], self.generation[0][1], self.generation[0][2])
+                self.app.paint_info(current_generation, self.generation[0][3])
                 break
 
             next_generation = []
-            # fix the number to be fixed
-            for i in range(0, 40): # 30% of best result in the last generation (should work without fixed number)
+            for i in range(0, int(NUM_OF_SOLUTIONS * ELITE)):
                 next_generation.append(self.generation[i])
 
-            # fix the number to be fixed
-            new_matrices = self.generate_matrices(10)
-            for i in range(0, 10):
+            num_of_new_matrices = int((NUM_OF_SOLUTIONS / 2) - int(NUM_OF_SOLUTIONS * ELITE))
+            new_matrices = self.generate_matrices(num_of_new_matrices)
+            for i in range(0, num_of_new_matrices):
                 next_generation.append(new_matrices[i])
 
             crossed_matrices = self.crossover(next_generation)
             for i in range(0, len(crossed_matrices)):
                 next_generation.append(crossed_matrices[i])
 
-            # fix the number to be fixed
             temp = []
             random.shuffle(next_generation)
-            for i in range(0, 20):
+            for i in range(0, int(NUM_OF_SOLUTIONS * MUTATE)):
                 temp.append(next_generation[i])
             mutate_matrices = self.mutation(temp)
-            for i in range(0, 20):
+            for i in range(0, int(NUM_OF_SOLUTIONS * MUTATE)):
                 next_generation[i] = mutate_matrices[i]
 
             self.generation = next_generation
             self.fitness()
             self.generation.sort(key=lambda tup: tup[3])
-            if current_generation == 1200:
-                app.App.paint_board(self, self.generation[0][0], self.generation[0][1], self.generation[0][2])
-                print(self.generation[0][3])
-                print("current generation is 1200, quiting")
-                print(self.generation[99][3])
-                break
 
+            if current_generation == MAX_ITERATIONS:
+                self.app.paint_board(self.generation[0][0], self.generation[0][1], self.generation[0][2])
+                self.app.paint_info(current_generation, self.generation[0][3], self.generation[NUM_OF_SOLUTIONS - 1][3])
+                break
             current_generation += 1

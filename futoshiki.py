@@ -2,13 +2,13 @@ import random
 import itertools
 
 MUTATE = 0.00
-ELITE = 0.15
-NEW_MATRICES = 0.35
+ELITE = 0.25
+NEW_MATRICES = 0.25
 NUM_OF_SOLUTIONS = 100
 MAX_ITERATIONS = 1200
 
 
-class Logic:
+class FutoshikiSolver:
     def __init__(self, app):
         with open('input.txt') as file:
             lines = file.readlines()
@@ -26,16 +26,24 @@ class Logic:
             self.coordinates_of_greater_then_sign.append(lines[i + self.num_of_digits + 3].strip('\n'))
 
         self.generation = []
-        self.initialize_first_generation()
+        first_generation_matrices = self.generate_matrices(NUM_OF_SOLUTIONS)
+        self.generation = self.fitness(first_generation_matrices)
 
-    def initialize_first_generation(self):
-        self.generation = self.generate_matrices(NUM_OF_SOLUTIONS)
-        self.fitness()
-
-    def fitness(self):
-        k = 0
-        for matrix in self.generation:
+    def fitness(self, matrices):
+        returned_matrices = []
+        for matrix in matrices:
             penalty = 0
+            matrix_rows = []
+            for i in range(0, self.size):
+                row = []
+                for j in range(0, self.size):
+                    row.append(matrix[0][i][j])
+                matrix_rows.append(row)
+
+            for row in matrix_rows:
+                unique_row = list(set(row))
+                penalty += (self.size - len(unique_row))
+
             matrix_cols = []
             for i in range(0, self.size):
                 col = []
@@ -48,30 +56,31 @@ class Logic:
                 penalty += (self.size - len(unique_col))
 
             for i in range(len(matrix[1])):
-                for j in range(len(matrix[1][i])):
+                for j in range(len(matrix[1][0])):
                     sign = matrix[1][i][j]
                     if sign != "":
                         if sign == "<":
-                            if int(matrix[0][i][j]) >= int(matrix[0][i][j+1]):
+                            if int(matrix[0][i][j]) >= int(matrix[0][i][j + 1]):
                                 penalty += 1
-                        else:
+                        elif sign == ">":
                             if int(matrix[0][i][j]) <= int(matrix[0][i][j + 1]):
                                 penalty += 1
 
             for i in range(len(matrix[2])):
-                for j in range(len(matrix[2][i])):
+                for j in range(len(matrix[2][0])):
                     sign = matrix[2][i][j]
                     if sign != "":
                         if sign == "\/":
-                            if matrix[0][i][j] <= matrix[0][i+1][j]:
+                            if matrix[0][i][j] <= matrix[0][i + 1][j]:
                                 penalty += 1
-                        else:
-                            if matrix[0][i][j] >= matrix[0][i+1][j]:
+                        elif sign == "/\\":
+                            if matrix[0][i][j] >= matrix[0][i + 1][j]:
                                 penalty += 1
+
             temp = list(matrix)
             temp[3] = penalty
-            self.generation[k] = tuple(temp)
-            k += 1
+            returned_matrices.append(tuple(temp))
+        return returned_matrices
 
     def generate_matrices(self, amount):
         matrices = []
@@ -100,7 +109,7 @@ class Logic:
             for j in range(len(sign_grid_by_row)):
                 del sign_grid_by_row[j][-1]
 
-            nums = list(range(1, self.size +1))
+            nums = list(range(1, self.size + 1))
             permutations = list(itertools.permutations(nums))
             for k in range(0, self.size):
                 permutation = list(permutations[random.randrange(len(permutations))])
@@ -136,20 +145,35 @@ class Logic:
         for i in range(len(matrices)):
             row = random.randint(0, self.size - 1)
             col = random.randint(0, self.size - 1)
-            mutate = random.randint(1, self.size - 1)
-            temp = matrices[i][0][row][col]
-            matrices[i][0][row][col] = matrices[i][0][row][mutate]
-            matrices[i][0][row][mutate] = temp
+            mutate = random.randint(0, self.size - 1)
+            matrices[i][0][row][col], matrices[i][0][row][mutate] = matrices[i][0][row][mutate], matrices[i][0][row][col]
         return matrices
+
+    def lamarckism(self, matrices):
+        returned_matrices = []
+        for matrix in matrices:
+            for i in range(0, len(matrix[1])):
+                for j in range(0, len(matrix[1][0])):
+                    sign = matrix[1][i][j]
+                    if sign != "":
+                        if sign == "<":
+                            if int(matrix[0][i][j]) >= int(matrix[0][i][j + 1]):
+                                matrix[0][i][j], matrix[0][i][j + 1] = int(matrix[0][i][j + 1]), int(matrix[0][i][j])
+                        elif sign == ">":
+                            if int(matrix[0][i][j]) <= int(matrix[0][i][j + 1]):
+                                matrix[0][i][j], matrix[0][i][j + 1] = int(matrix[0][i][j + 1]), int(matrix[0][i][j])
+
+            returned_matrices.append(matrix)
+        return returned_matrices
 
     def main_loop(self):
         current_generation = 1
         while True:
-            if self.generation[0][3] == 0:
+            self.generation.sort(key=lambda tup: tup[3])
+            if self.generation[0][3] == 0 or current_generation == MAX_ITERATIONS:
                 self.app.paint_board(self.generation[0][0], self.generation[0][1], self.generation[0][2])
-                self.app.paint_info(current_generation, self.generation[0][3])
+                self.app.paint_info(current_generation, self.generation[0][3], self.generation[NUM_OF_SOLUTIONS - 1][3])
                 break
-
             next_generation = []
             for i in range(0, int(NUM_OF_SOLUTIONS * ELITE)):
                 next_generation.append(self.generation[i])
@@ -171,12 +195,7 @@ class Logic:
             for i in range(0, int(NUM_OF_SOLUTIONS * MUTATE)):
                 next_generation[i] = mutate_matrices[i]
 
-            self.generation = next_generation
-            self.fitness()
-            self.generation.sort(key=lambda tup: tup[3])
-
-            if current_generation == 5:
-                self.app.paint_board(self.generation[0][0], self.generation[0][1], self.generation[0][2])
-                self.app.paint_info(current_generation, self.generation[0][3], self.generation[NUM_OF_SOLUTIONS - 1][3])
-                break
+            next_generation = self.lamarckism(next_generation)
+            self.generation = self.fitness(next_generation)
             current_generation += 1
+

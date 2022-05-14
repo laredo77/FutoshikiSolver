@@ -1,5 +1,5 @@
 from tkinter import *
-from logic import Logic
+from futoshiki import FutoshikiSolver
 
 
 def createEntry(master, default_value):
@@ -31,7 +31,7 @@ class App(Tk):
         self.maxsize(int(lines[line+1].strip('\n')), int(lines[line+1].strip('\n')))
         self.title('Futoshiki')
         self.configure(background="#2c313a", highlightcolor="#1f7db7")
-        self.logic = Logic(self)
+        self.solver = FutoshikiSolver(self)
         self.frame = Canvas(
             bg="#404040",
             bd=0,
@@ -53,6 +53,7 @@ class App(Tk):
             width=27,
             bg="#404040",
             fg="#f0f0f0",
+            highlightbackground="#100100100",
             relief='groove',
             font=("Consoles", 11, 'bold'),
             text='\u23F5 Start   ',
@@ -65,7 +66,7 @@ class App(Tk):
         self.information_pos = lines[line+6].split()
 
     def run_btn_action(self):
-        self.logic.main_loop()
+        self.solver.main_loop()
 
     def paint_board(self, grid, sign_rows, sign_cols):
         y = float(self.lines_pos[1])
@@ -119,6 +120,7 @@ class App(Tk):
             master=self,
             bg="#404040",
             fg="#f0f0f0",
+            highlightbackground="#100100100",
             text='Information',
             font=("Consoles", 11, 'bold')
         )

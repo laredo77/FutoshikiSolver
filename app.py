@@ -16,11 +16,19 @@ def createEntry(master, default_value):
 
 
 class App(Tk):
-    def __init__(self):
+    def __init__(self, size):
         super().__init__()
-        self.geometry('500x500')
-        self.minsize(500, 500)
-        self.maxsize(500, 500)
+        with open('dimentions.txt') as file:
+            lines = file.readlines()
+        if size == 5:
+            line = 1
+        elif size == 6:
+            line = 9
+        else:
+            line = 17
+        self.geometry(lines[line].strip('\n'))
+        self.minsize(int(lines[line+1].strip('\n')), int(lines[line+1].strip('\n')))
+        self.maxsize(int(lines[line+1].strip('\n')), int(lines[line+1].strip('\n')))
         self.title('Futoshiki')
         self.configure(background="#2c313a", highlightcolor="#1f7db7")
         self.logic = Logic(self)
@@ -28,9 +36,10 @@ class App(Tk):
             bg="#404040",
             bd=0,
             highlightbackground="#100100100",
-            width=300,
-            height=300)
-        self.frame.place(relx=0.2, rely=0.13)
+            width=int(lines[line+2].strip('\n')),
+            height=int(lines[line+2].strip('\n')))
+        frame_pos = lines[line+3].split()
+        self.frame.place(relx=float(frame_pos[0]), rely=float(frame_pos[1]))
 
         self.frame2 = Canvas(
             bg="#307070",
@@ -49,16 +58,20 @@ class App(Tk):
             text='\u23F5 Start   ',
             command=self.run_btn_action
         )
-        self.run_btn.place(relx=0.24, rely=0.025, width=265, height=40)
+        run_btn_pos = lines[line+4].split()
+        self.run_btn.place(relx=float(run_btn_pos[0]), rely=float(run_btn_pos[1]), width=265, height=40)
+
+        self.lines_pos = lines[line+5].split()
+        self.information_pos = lines[line+6].split()
 
     def run_btn_action(self):
         self.logic.main_loop()
 
     def paint_board(self, grid, sign_rows, sign_cols):
-        y = 0.23
-        for i in range(0, 5):
-            x = 0.275
-            for j in range(0, 5):
+        y = float(self.lines_pos[1])
+        for i in range(0, len(grid)):
+            x = float(self.lines_pos[0])
+            for j in range(0, len(grid)):
                 self.frame2 = Canvas(
                     bg="#307070",
                     bd=0,
@@ -70,9 +83,9 @@ class App(Tk):
                 x += 0.1
             y += 0.1
 
-        y = 0.23
+        y = float(self.lines_pos[3])
         for i in range(len(sign_rows)):
-            x = 0.325
+            x = float(self.lines_pos[2])
             for j in range(len(sign_rows[i])):
                 self.row_signs_frame = Canvas(
                     bg="#404040",
@@ -85,9 +98,9 @@ class App(Tk):
                 x += 0.1
             y += 0.1
 
-        y = 0.28
+        y = float(self.lines_pos[5])
         for i in range(len(sign_cols)):
-            x = 0.275
+            x = float(self.lines_pos[4])
             for j in range(len(sign_cols[i])):
                 self.col_signs_frame = Canvas(
                     bg="#404040",
@@ -109,7 +122,7 @@ class App(Tk):
             text='Information',
             font=("Consoles", 11, 'bold')
         )
-        self.information.place(relx=0.05, rely=0.75, width=450, height=120)
+        self.information.place(relx=float(self.information_pos[0]), rely=float(self.information_pos[1]), width=450, height=120)
 
         Label(
             master=self.information,

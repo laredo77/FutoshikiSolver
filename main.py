@@ -7,5 +7,8 @@ from app import App
 
 
 if __name__ == '__main__':
-    app = App()
+    with open('input.txt') as file:
+        line = file.readline()
+    size = int(line.strip('\n'))
+    app = App(size)
     app.mainloop()

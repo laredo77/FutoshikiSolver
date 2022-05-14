@@ -2,8 +2,8 @@ import random
 import itertools
 
 MUTATE = 0.00
-ELITE = 0.25
-NEW_MATRICES = 0.25
+ELITE = 0.15
+NEW_MATRICES = 0.35
 NUM_OF_SOLUTIONS = 100
 MAX_ITERATIONS = 1200
 
@@ -15,7 +15,6 @@ class Logic:
 
         self.app = app
         self.size = int(lines[0].strip('\n'))
-        self.matrix_size = self.size * 2 - 1
         self.num_of_digits = int(lines[1].strip('\n'))
         self.coordinates_of_given_digits = []
         for i in range(0, self.num_of_digits):
@@ -176,7 +175,7 @@ class Logic:
             self.fitness()
             self.generation.sort(key=lambda tup: tup[3])
 
-            if current_generation == MAX_ITERATIONS:
+            if current_generation == 5:
                 self.app.paint_board(self.generation[0][0], self.generation[0][1], self.generation[0][2])
                 self.app.paint_info(current_generation, self.generation[0][3], self.generation[NUM_OF_SOLUTIONS - 1][3])
                 break

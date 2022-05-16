@@ -1,3 +1,4 @@
+# Itamar Laredo
 from tkinter import *
 from futoshiki import FutoshikiSolver
 

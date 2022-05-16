@@ -1,9 +1,12 @@
+# Itamar Laredo
 import random
 import itertools
+from matplotlib import pyplot as plt
+import numpy as np
 
 MUTATE = 0.00
-ELITE = 0.25
-NEW_MATRICES = 0.25
+ELITE = 0.15
+NEW_MATRICES = 0.35
 NUM_OF_SOLUTIONS = 100
 MAX_ITERATIONS = 1200
 
@@ -28,6 +31,7 @@ class FutoshikiSolver:
         self.generation = []
         first_generation_matrices = self.generate_matrices(NUM_OF_SOLUTIONS)
         self.generation = self.fitness(first_generation_matrices)
+        self.data = []
 
     def fitness(self, matrices):
         returned_matrices = []
@@ -170,9 +174,13 @@ class FutoshikiSolver:
         current_generation = 1
         while True:
             self.generation.sort(key=lambda tup: tup[3])
+            if (current_generation % 100) == 0:
+                self.data.append((self.generation[0][3], self.generation[int(NUM_OF_SOLUTIONS/2)][3],
+                                self.generation[NUM_OF_SOLUTIONS - 1][3], current_generation))
             if self.generation[0][3] == 0 or current_generation == MAX_ITERATIONS:
                 self.app.paint_board(self.generation[0][0], self.generation[0][1], self.generation[0][2])
                 self.app.paint_info(current_generation, self.generation[0][3], self.generation[NUM_OF_SOLUTIONS - 1][3])
+                self.plot()
                 break
             next_generation = []
             for i in range(0, int(NUM_OF_SOLUTIONS * ELITE)):
@@ -195,7 +203,33 @@ class FutoshikiSolver:
             for i in range(0, int(NUM_OF_SOLUTIONS * MUTATE)):
                 next_generation[i] = mutate_matrices[i]
 
-            next_generation = self.lamarckism(next_generation)
+            next_generation = self.lamarckism(next_generation) # Optional: Lamarckism
             self.generation = self.fitness(next_generation)
+
             current_generation += 1
 
+    def plot(self):
+        plt.figure()
+        plt.title('7x7 Easy, Lamarck Method')
+        plt.xlabel('# Generation x 100')
+        plt.ylabel('# Amount of unsetesfaction constraints')
+        best_sol = []
+        avg_sol = []
+        wst_sol = []
+        cur_gen = []
+
+        for i in range(0, len(self.data)):
+            best_sol.append(self.data[i][0])
+            avg_sol.append(self.data[i][1])
+            wst_sol.append(self.data[i][2])
+            cur_gen.append(self.data[i][3])
+
+        x_axis = np.arange(len(cur_gen))
+        ax = plt.subplot(111)
+        w = 0.3
+        ax.bar(x_axis - w, wst_sol, width=w, color='r', align='center', label="Worst")
+        ax.bar(x_axis, avg_sol, width=w, color='g', align='center', label="Average")
+        ax.bar(x_axis + w, best_sol, width=w, color='b', align='center', label="Best")
+        plt.legend()
+        plt.savefig('./graph.png')
+        plt.show()

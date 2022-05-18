@@ -1,4 +1,4 @@
-# Itamar Laredo
+# Itamar Laredo, 311547087
 from tkinter import *
 from futoshiki import FutoshikiSolver
 
@@ -24,15 +24,16 @@ class App(Tk):
         if size == 5:
             line = 1
         elif size == 6:
-            line = 9
+            line = 10
         else:
-            line = 17
+            line = 19
         self.geometry(lines[line].strip('\n'))
         self.minsize(int(lines[line+1].strip('\n')), int(lines[line+1].strip('\n')))
         self.maxsize(int(lines[line+1].strip('\n')), int(lines[line+1].strip('\n')))
         self.title('Futoshiki')
         self.configure(background="#2c313a", highlightcolor="#1f7db7")
         self.solver = FutoshikiSolver(self)
+        self.method_flag = 0
         self.frame = Canvas(
             bg="#404040",
             bd=0,
@@ -63,11 +64,71 @@ class App(Tk):
         run_btn_pos = lines[line+4].split()
         self.run_btn.place(relx=float(run_btn_pos[0]), rely=float(run_btn_pos[1]), width=265, height=40)
 
+        self.darwin_btn = Button(
+            master=self,
+            width=27,
+            bg="#404040",
+            fg="#f0f0f0",
+            highlightbackground="#100100100",
+            relief='groove',
+            font=("Consoles", 7, 'bold'),
+            text='Darwin Method',
+            command=self.darwin_btn_action
+        )
+        darwin_btn_pos = lines[line+7].split()
+        self.darwin_btn.place(relx=float(darwin_btn_pos[0]), rely=float(darwin_btn_pos[1]), width=80, height=40)
+
+        self.lamarck_btn = Button(
+            master=self,
+            width=27,
+            bg="#404040",
+            fg="#f0f0f0",
+            highlightbackground="#100100100",
+            relief='groove',
+            font=("Consoles", 7, 'bold'),
+            text='Lamarck Method',
+            command=self.lamarck_btn_action
+        )
+        self.lamarck_btn.place(relx=float(darwin_btn_pos[0]), rely=float(darwin_btn_pos[1]) + 0.1, width=80, height=40)
+
+        self.regular_btn = Button(
+            master=self,
+            width=27,
+            bg="#404040",
+            fg="#f0f0f0",
+            highlightbackground="#100100100",
+            relief='groove',
+            font=("Consoles", 7, 'bold'),
+            text='Regular Method',
+            command=self.regular_btn_action
+        )
+        self.regular_btn.place(relx=float(darwin_btn_pos[0]), rely=float(darwin_btn_pos[1]) + 0.2, width=80, height=40)
+
         self.lines_pos = lines[line+5].split()
         self.information_pos = lines[line+6].split()
 
     def run_btn_action(self):
+        if not self.method_flag:
+            return
         self.solver.main_loop()
+
+    def darwin_btn_action(self):
+        if self.method_flag:
+            return
+        self.method_flag = 1
+        self.solver.darwin = 1
+
+    def lamarck_btn_action(self):
+        if self.method_flag:
+            return
+        self.method_flag = 1
+        self.solver.lamarck = 1
+
+    def regular_btn_action(self):
+        if self.method_flag:
+            return
+        self.method_flag = 1
+        self.solver.lamarck = 1
 
     def paint_board(self, grid, sign_rows, sign_cols):
         y = float(self.lines_pos[1])

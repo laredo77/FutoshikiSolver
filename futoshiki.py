@@ -1,4 +1,4 @@
-# Itamar Laredo
+# Itamar Laredo, 311547087
 import random
 import itertools
 from matplotlib import pyplot as plt
@@ -32,6 +32,9 @@ class FutoshikiSolver:
         first_generation_matrices = self.generate_matrices(NUM_OF_SOLUTIONS)
         self.generation = self.fitness(first_generation_matrices)
         self.data = []
+        self.darwin = 0
+        self.lamarck = 0
+        self.regular = 0
 
     def fitness(self, matrices):
         returned_matrices = []
@@ -203,14 +206,22 @@ class FutoshikiSolver:
             for i in range(0, int(NUM_OF_SOLUTIONS * MUTATE)):
                 next_generation[i] = mutate_matrices[i]
 
-            next_generation = self.lamarckism(next_generation) # Optional: Lamarckism
-            self.generation = self.fitness(next_generation)
+            if self.darwin:
+                darwin_next_generation = next_generation
+                next_generation = self.lamarckism(next_generation) # Optional: Lamarckism
+                next_generation = self.fitness(next_generation)
+                self.generation = next_generation
+            elif self.lamarck:
+                next_generation = self.lamarckism(next_generation)  # Optional: Lamarckism
+                self.generation = self.fitness(next_generation)
+            elif self.regular:
+                self.generation = self.fitness(next_generation)
 
             current_generation += 1
 
     def plot(self):
         plt.figure()
-        plt.title('7x7 Easy, Lamarck Method')
+        plt.title('Graph')
         plt.xlabel('# Generation x 100')
         plt.ylabel('# Amount of unsetesfaction constraints')
         best_sol = []

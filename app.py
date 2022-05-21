@@ -1,4 +1,4 @@
-# Itamar Laredo, 311547087
+# Itamar Laredo
 from tkinter import *
 from futoshiki import FutoshikiSolver
 
@@ -15,7 +15,10 @@ def createEntry(master, default_value):
     entry.insert(0, default_value)
     return entry
 
-
+"""
+Create a GUI for the board game.
+Initialize buttons and their location on the frame.
+"""
 class App(Tk):
     def __init__(self, size):
         super().__init__()

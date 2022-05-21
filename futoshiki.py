@@ -1,22 +1,37 @@
-# Itamar Laredo, 311547087
+# Itamar Laredo
 import random
 import itertools
 from matplotlib import pyplot as plt
 import numpy as np
+from copy import deepcopy
 
+
+"""
+Global variables for user selection that will cause algorithms to behave differently.
+The currently applied values the default.
+"""
 MUTATE = 0.00
 ELITE = 0.15
 NEW_MATRICES = 0.35
 NUM_OF_SOLUTIONS = 100
 MAX_ITERATIONS = 1200
 
-
+"""
+This class made to solve the Futoshiki board game.
+The solver uses a genetic algorithm and optimization methods from the field of biology, 
+to get and present the solution.
+"""
 class FutoshikiSolver:
+    """
+    In the init function will read the input file, and initialize important data.
+    In addition will generate the first generation.
+    """
     def __init__(self, app):
         with open('input.txt') as file:
             lines = file.readlines()
 
         self.app = app
+        # Initialize the board
         self.size = int(lines[0].strip('\n'))
         self.num_of_digits = int(lines[1].strip('\n'))
         self.coordinates_of_given_digits = []
@@ -28,6 +43,7 @@ class FutoshikiSolver:
         for i in range(0, self.num_of_greater_then_sign):
             self.coordinates_of_greater_then_sign.append(lines[i + self.num_of_digits + 3].strip('\n'))
 
+        # Initialize first generation
         self.generation = []
         first_generation_matrices = self.generate_matrices(NUM_OF_SOLUTIONS)
         self.generation = self.fitness(first_generation_matrices)
@@ -36,6 +52,64 @@ class FutoshikiSolver:
         self.lamarck = 0
         self.regular = 0
 
+    """
+    A function which gets a number and creates solutions as this amount.
+    The function creates tuples that contain a list of numbers that will be placed on the board,
+    a list of row sign's ('>') and a list of column sign's.
+    The construction is done so that at each row the numbers will be from 1 to N,
+    in purpose that there will be no mismatches in the rows at start.
+    """
+    def generate_matrices(self, amount):
+        matrices = []
+        for i in range(0, amount):
+            grid = [["0" for i in range(self.size)] for j in range(self.size)]
+            for coordinate in self.coordinates_of_given_digits:
+                coordinate = coordinate.split()
+                grid[int(coordinate[0]) - 1][int(coordinate[1]) - 1] = int(coordinate[2])
+
+            sign_grid_by_row = [["" for i in range(self.size)] for j in range(self.size)]
+            sign_grid_by_col = [["" for i in range(self.size)] for j in range(self.size)]
+            for coordinate in self.coordinates_of_greater_then_sign:
+                coordinate = coordinate.split()
+                if coordinate[0] == coordinate[2]:
+                    if coordinate[1] > coordinate[3]:
+                        sign_grid_by_row[int(coordinate[0]) - 1][int(coordinate[3]) - 1] = "<"
+                    else:
+                        sign_grid_by_row[int(coordinate[0]) - 1][int(coordinate[1]) - 1] = ">"
+                else:
+                    if coordinate[0] > coordinate[2]:
+                        sign_grid_by_col[int(coordinate[2]) - 1][int(coordinate[1]) - 1] = "/\\"
+                    else:
+                        sign_grid_by_col[int(coordinate[0]) - 1][int(coordinate[3]) - 1] = "\/"
+
+            del sign_grid_by_col[-1]
+            for j in range(len(sign_grid_by_row)):
+                del sign_grid_by_row[j][-1]
+
+            nums = list(range(1, self.size + 1))
+            permutations = list(itertools.permutations(nums))
+            for k in range(0, self.size):
+                permutation = list(permutations[random.randrange(len(permutations))])
+                for j in range(0, self.size):
+                    if grid[k][j] != "0":
+                        permutation.remove(int(grid[k][j]))
+                for j in range(0, self.size):
+                    if grid[k][j] == "0":
+                        grid[k][j] = permutation[0]
+                        permutation.pop(0)
+            grade = 0
+            matrices.append((grid, sign_grid_by_row, sign_grid_by_col, grade))
+
+        return matrices
+
+    """
+    The fitness function is evaluation function that calculates in each generation
+    and for each solution the amount of mismatches in the matrix.
+    The function goes through all the rows and columns and counts duplicates numbers.
+    In addition to any non-compliance with a '>' sign the counter large by 1.
+    Finally, the function returns the solutions so that the
+    number of mismatches is added to the tuple in the 3rd position.
+    """
     def fitness(self, matrices):
         returned_matrices = []
         for matrix in matrices:
@@ -89,49 +163,13 @@ class FutoshikiSolver:
             returned_matrices.append(tuple(temp))
         return returned_matrices
 
-    def generate_matrices(self, amount):
-        matrices = []
-        for i in range(0, amount):
-            grid = [["0" for i in range(self.size)] for j in range(self.size)]
-            for coordinate in self.coordinates_of_given_digits:
-                coordinate = coordinate.split()
-                grid[int(coordinate[0]) - 1][int(coordinate[1]) - 1] = int(coordinate[2])
-
-            sign_grid_by_row = [["" for i in range(self.size)] for j in range(self.size)]
-            sign_grid_by_col = [["" for i in range(self.size)] for j in range(self.size)]
-            for coordinate in self.coordinates_of_greater_then_sign:
-                coordinate = coordinate.split()
-                if coordinate[0] == coordinate[2]:
-                    if coordinate[1] > coordinate[3]:
-                        sign_grid_by_row[int(coordinate[0]) - 1][int(coordinate[3]) - 1] = "<"
-                    else:
-                        sign_grid_by_row[int(coordinate[0]) - 1][int(coordinate[1]) - 1] = ">"
-                else:
-                    if coordinate[0] > coordinate[2]:
-                        sign_grid_by_col[int(coordinate[2]) - 1][int(coordinate[1]) - 1] = "/\\"
-                    else:
-                        sign_grid_by_col[int(coordinate[0]) - 1][int(coordinate[3]) - 1] = "\/"
-
-            del sign_grid_by_col[-1]
-            for j in range(len(sign_grid_by_row)):
-                del sign_grid_by_row[j][-1]
-
-            nums = list(range(1, self.size + 1))
-            permutations = list(itertools.permutations(nums))
-            for k in range(0, self.size):
-                permutation = list(permutations[random.randrange(len(permutations))])
-                for j in range(0, self.size):
-                    if grid[k][j] != "0":
-                        permutation.remove(int(grid[k][j]))
-                for j in range(0, self.size):
-                    if grid[k][j] == "0":
-                        grid[k][j] = permutation[0]
-                        permutation.pop(0)
-            grade = 0
-            matrices.append((grid, sign_grid_by_row, sign_grid_by_col, grade))
-
-        return matrices
-
+    """
+    A function that creates matrices from a crossing between 2 other matrices.
+    The function has 2 random matrices, for each pair of matrices, random a row in
+    which the "cutting" will take place. Then concatenate the first part of the first matrix
+    to the second part of the second matrix.
+    Finally returns a list of new matrices
+    """
     def crossover(self, matrices):
         return_matrices = []
         random.shuffle(matrices)
@@ -148,6 +186,11 @@ class FutoshikiSolver:
         return_matrices.append(matrices[0])
         return return_matrices
 
+    """
+    A function that creates mutations in matrices to avoid premature convergence.
+    The function rolls a row number and another 2 column numbers
+    and replaces the two numbers in the columns in the same row.
+    """
     def mutation(self, matrices):
         for i in range(len(matrices)):
             row = random.randint(0, self.size - 1)
@@ -156,6 +199,12 @@ class FutoshikiSolver:
             matrices[i][0][row][col], matrices[i][0][row][mutate] = matrices[i][0][row][mutate], matrices[i][0][row][col]
         return matrices
 
+    """
+    Lamarck optimization.
+    The optimization that set is that for each matrix and for each row,
+    the numbers that do not meet the constraints of a '>' will be replaced.
+    for example: 1 > 4 --> 4 > 1
+    """
     def lamarckism(self, matrices):
         returned_matrices = []
         for matrix in matrices:
@@ -173,6 +222,14 @@ class FutoshikiSolver:
             returned_matrices.append(matrix)
         return returned_matrices
 
+    """
+    The main loop starts from first generation to the maximum of generations set by the user.
+    The loop has improved over the generations so that each generation
+    undergoes crossovers, mutations and optimization.
+    If a generation contain a solution the loop will stop and display it.
+    If not reach a solution and reached the maximum number of iterations the loop will 
+    stop and display the best solution so far.
+    """
     def main_loop(self):
         current_generation = 1
         while True:
@@ -181,6 +238,20 @@ class FutoshikiSolver:
                 self.data.append((self.generation[0][3], self.generation[int(NUM_OF_SOLUTIONS/2)][3],
                                 self.generation[NUM_OF_SOLUTIONS - 1][3], current_generation))
             if self.generation[0][3] == 0 or current_generation == MAX_ITERATIONS:
+                if self.darwin:
+                    # In Darwin optimization it is possible that a solution will "have"
+                    # a solution without any mismatches and in real
+                    # there are mismatches so will perform a double check.
+                    tmp = self.generation
+                    tmp = self.fitness(tmp)
+                    tmp.sort(key=lambda tup: tup[3])
+                    if current_generation == MAX_ITERATIONS:
+                        self.app.paint_board(tmp[0][0], tmp[0][1], tmp[0][2])
+                        self.app.paint_info(current_generation, tmp[0][3], tmp[NUM_OF_SOLUTIONS - 1][3])
+                        self.plot()
+                        break
+                    if tmp[0][3] != 0:
+                        continue
                 self.app.paint_board(self.generation[0][0], self.generation[0][1], self.generation[0][2])
                 self.app.paint_info(current_generation, self.generation[0][3], self.generation[NUM_OF_SOLUTIONS - 1][3])
                 self.plot()
@@ -206,19 +277,25 @@ class FutoshikiSolver:
             for i in range(0, int(NUM_OF_SOLUTIONS * MUTATE)):
                 next_generation[i] = mutate_matrices[i]
 
-            if self.darwin:
-                darwin_next_generation = next_generation
+            if self.darwin: # Darwin optimization
+                tmp = deepcopy(next_generation)
                 next_generation = self.lamarckism(next_generation) # Optional: Lamarckism
                 next_generation = self.fitness(next_generation)
-                self.generation = next_generation
-            elif self.lamarck:
+                darwin_next_generation = []
+                for i in range(0, len(next_generation)):
+                    darwin_next_generation.append((tmp[i][0], tmp[i][1], tmp[i][2], next_generation[i][3]))
+                self.generation = darwin_next_generation
+            elif self.lamarck: # Lamarck optimization
                 next_generation = self.lamarckism(next_generation)  # Optional: Lamarckism
                 self.generation = self.fitness(next_generation)
-            elif self.regular:
+            elif self.regular: # Regular algorithm
                 self.generation = self.fitness(next_generation)
 
             current_generation += 1
 
+    """
+    A function for creating a graph and displaying the final results.
+    """
     def plot(self):
         plt.figure()
         plt.title('Graph')

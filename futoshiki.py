@@ -27,30 +27,32 @@ class FutoshikiSolver:
     In addition will generate the first generation.
     """
     def __init__(self, app):
-        with open('input.txt') as file:
-            lines = file.readlines()
-
         self.app = app
-        # Initialize the board
-        self.size = int(lines[0].strip('\n'))
-        self.num_of_digits = int(lines[1].strip('\n'))
-        self.coordinates_of_given_digits = []
-        for i in range(0, self.num_of_digits):
-            self.coordinates_of_given_digits.append(lines[i + 2].strip('\n'))
-
-        self.num_of_greater_then_sign = int(lines[self.num_of_digits + 2].strip('\n'))
-        self.coordinates_of_greater_then_sign = []
-        for i in range(0, self.num_of_greater_then_sign):
-            self.coordinates_of_greater_then_sign.append(lines[i + self.num_of_digits + 3].strip('\n'))
-
-        # Initialize first generation
-        self.generation = []
-        first_generation_matrices = self.generate_matrices(NUM_OF_SOLUTIONS)
-        self.generation = self.fitness(first_generation_matrices)
         self.data = []
+        self.size = 0
+        self.num_of_digits = 0
+        self.coordinates_of_given_digits = []
+        self.num_of_greater_then_sign = 0
+        self.coordinates_of_greater_then_sign = []
+        self.generation = []
         self.darwin = 0
         self.lamarck = 0
         self.regular = 0
+
+    def initialize_app(self, input_txt):
+        input_arr = input_txt.split('\n')
+        self.size = int(input_arr[0].strip('\n'))
+        self.num_of_digits = int(input_arr[1].strip('\n'))
+        for i in range(0, self.num_of_digits):
+            self.coordinates_of_given_digits.append(input_arr[i + 2].strip('\n'))
+
+        self.num_of_greater_then_sign = int(input_arr[self.num_of_digits + 2].strip('\n'))
+        for i in range(0, self.num_of_greater_then_sign):
+            self.coordinates_of_greater_then_sign.append(input_arr[i + self.num_of_digits + 3].strip('\n'))
+
+        # Initialize first generation
+        first_generation_matrices = self.generate_matrices(NUM_OF_SOLUTIONS)
+        self.generation = self.fitness(first_generation_matrices)
 
     """
     A function which gets a number and creates solutions as this amount.

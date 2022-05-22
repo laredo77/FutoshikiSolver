@@ -30,9 +30,9 @@ Initialize buttons and their location on the frame.
 class App(Tk):
     def __init__(self, size):
         super().__init__()
-        if size == 5:
+        if size == "5":
             line = 1
-        elif size == 6:
+        elif size == "6":
             line = 10
         else:
             line = 19
